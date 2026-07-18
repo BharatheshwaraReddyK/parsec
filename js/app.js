@@ -285,6 +285,7 @@
       '.tok-added{background:#E1F6FA;color:#0891B2;border-radius:3px;}' +
       '.move-note{color:#6D28D9;opacity:0.75;font-size:0.72rem;margin-left:10px;}' +
       '.note{color:#8891A4;font-size:0.78rem;margin:10px 0 24px;font-family:ui-monospace,monospace;}' +
+      '@media print{ body{padding:0;} .payload pre{max-height:none;overflow:visible;} .diff-view{max-height:none;overflow:visible;} @page{margin:16mm;} }' +
       '</style></head><body>' +
       '<h1>Parsec comparison report</h1>' +
       '<div class="meta">Generated ' + escapeHtml(now) + '</div>' +
@@ -306,10 +307,113 @@
       '</body></html>';
   }
 
-  document.getElementById('cmp-download').addEventListener('click', () => {
-    if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
+  function reportFilename(ext){
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-    downloadText(buildComparisonReportHtml(lastCompareState), 'parsec-comparison-' + stamp + '.html');
+    return 'parsec-comparison-' + stamp + '.' + ext;
+  }
+
+  document.getElementById('cmp-download-html').addEventListener('click', () => {
+    if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
+    downloadText(buildComparisonReportHtml(lastCompareState), reportFilename('html'));
+  });
+
+  // PDF: the browser already knows how to turn HTML into a PDF via its print
+  // engine, so this just loads the report into a hidden iframe and opens the
+  // native print dialog — no library needed, and "Save as PDF" is a
+  // print-destination option in every modern browser.
+  document.getElementById('cmp-download-pdf').addEventListener('click', () => {
+    if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
+    const reportHtml = buildComparisonReportHtml(lastCompareState);
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0;';
+    document.body.appendChild(iframe);
+    const cleanup = () => { if(iframe.parentNode) document.body.removeChild(iframe); };
+    iframe.onload = () => {
+      try{
+        iframe.contentWindow.onafterprint = cleanup;
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }catch(e){
+        showError(cmpError, 'Could not open the print dialog: ' + e.message);
+        cleanup();
+      }
+    };
+    setTimeout(cleanup, 20000);
+    iframe.srcdoc = reportHtml;
+  });
+
+  // PNG: best-effort, no-library image export. Renders the report into a
+  // hidden iframe (to get real, laid-out content and an accurate height),
+  // serializes that into a self-contained SVG via <foreignObject>, then draws
+  // the SVG onto a canvas and exports it as a PNG. This works in most modern
+  // browsers for content like ours (no external images/fonts), but some
+  // browsers — Safari in particular — can block canvas export for
+  // foreignObject-based SVGs as a security precaution. If that happens we
+  // show a clear error and point back to the HTML/PDF options instead of
+  // failing silently.
+  document.getElementById('cmp-download-png').addEventListener('click', () => {
+    if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
+    showError(cmpError, null);
+    const reportHtml = buildComparisonReportHtml(lastCompareState);
+    const width = 1200;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed; left:-99999px; top:0; width:' + width + 'px; height:600px; border:0;';
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      let doc, height;
+      try{
+        doc = iframe.contentDocument;
+        height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 600);
+      }catch(e){
+        document.body.removeChild(iframe);
+        showError(cmpError, 'PNG export failed while measuring the report. Try HTML or PDF instead.');
+        return;
+      }
+
+      const innerHtml = doc.documentElement.outerHTML;
+      const svgString =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+        '<foreignObject width="100%" height="100%">' + innerHtml + '</foreignObject></svg>';
+
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const img = new Image();
+
+      img.onload = () => {
+        try{
+          const scale = 2; // render at 2x for a sharper image
+          const canvas = document.createElement('canvas');
+          canvas.width = width * scale;
+          canvas.height = height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => {
+            if(!blob){ showError(cmpError, 'This browser blocked PNG export for security reasons. Try HTML or PDF instead.'); return; }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = reportFilename('png');
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          }, 'image/png');
+        }catch(e){
+          showError(cmpError, 'This browser blocked PNG export for security reasons (' + e.message + '). Try HTML or PDF instead.');
+        }finally{
+          URL.revokeObjectURL(svgUrl);
+          document.body.removeChild(iframe);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        document.body.removeChild(iframe);
+        showError(cmpError, 'PNG export isn\'t supported in this browser. Try HTML or PDF instead.');
+      };
+      img.src = svgUrl;
+    };
+    iframe.srcdoc = reportHtml;
   });
 
   const triggerCmpAUpload = window.ParsecDragDrop.attach(cmpA);

@@ -10,7 +10,10 @@ A free, local-first tool to format, compare, and convert JSON, XML, YAML, and CS
   - **Move detection** — a field that was only reordered/shuffled is shown as *moved*, not as a fake delete+add
   - **Word-level modified-line highlighting** — a line that was only partially edited shows exactly which words changed
   - **"Only in A" / "Only in B" labeling with +/− symbols** — fields present in just one side are labeled by presence, not by an implied edit action (avoids the misleading "removed from A" phrasing when nothing was actually deleted by anyone). Symbols (`+`, `−`, `⇄` for moved, `~` for modified) are baked into the actual text, not just CSS coloring, so they survive copy-paste, screen readers, and the downloaded report
-  - **Download report** — saves a single self-contained HTML file with the original (A) and changed (B) payloads exactly as pasted, the summary stats, a symbol legend, and the full color-coded + symbol-coded diff — handy for sharing or archiving a comparison
+  - **Download report** — saves the original (A) and changed (B) payloads exactly as pasted, the summary stats, a symbol legend, and the full color-coded + symbol-coded diff, as **HTML**, **PDF**, or **PNG**:
+    - **HTML** — always works, opens in any browser
+    - **PDF** — uses the browser's native print engine ("Save as PDF" in the print dialog); no library needed, reliable everywhere
+    - **PNG** — best-effort, no external library; works in most modern browsers but some (notably some Safari versions) may block canvas image export as a security precaution — if it fails, use HTML or PDF instead
 - **Convert** — any direction between JSON, XML, YAML, and CSV, with:
   - **Strip root wrapper** (XML source only) — drops the outer root element name and its own attributes (e.g. namespace declarations), so `{"n0:Root": {"@xmlns:n0": "...", "Records": {...}}}` becomes just `{"Records": {...}}`
   - **CSV delimiter** — comma, semicolon, tab, pipe, or a custom character
