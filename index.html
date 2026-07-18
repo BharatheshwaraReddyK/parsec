@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parsec — format, compare, convert JSON / XML / CSV / YAML</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none">
+      <circle cx="8" cy="10" r="3" fill="#67E8F9"/>
+      <circle cx="32" cy="8" r="2.2" fill="#FBBF24"/>
+      <circle cx="30" cy="32" r="3" fill="#34D399"/>
+      <circle cx="10" cy="30" r="2" fill="#FB7185"/>
+      <path d="M8 10 L32 8 L30 32 L10 30 Z" stroke="#2A3448" stroke-width="1.2"/>
+      <path d="M8 10 L30 32 M32 8 L10 30" stroke="#1A2130" stroke-width="1"/>
+    </svg>
+    <div class="brand-text">
+      <h1>Parsec</h1>
+      <p>measure the distance between formats</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <nav class="tabs">
+      <button class="tab-btn active" data-view="format">Format</button>
+      <button class="tab-btn" data-view="compare">Compare</button>
+      <button class="tab-btn" data-view="convert">Convert</button>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark theme">🌙 <span id="theme-label">Dark</span></button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ FORMAT VIEW ============ -->
+  <section id="view-format" class="view active">
+    <div class="toolbar">
+      <label>Type</label>
+      <select id="fmt-type">
+        <option value="auto">Auto-detect</option>
+        <option value="json">JSON</option>
+        <option value="xml">XML</option>
+        <option value="yaml">YAML</option>
+        <option value="csv">CSV</option>
+      </select>
+      <span class="badge" id="fmt-detected">—</span>
+      <label style="margin-left:8px;">Indent</label>
+      <select id="fmt-indent">
+        <option value="2">2 spaces</option>
+        <option value="4">4 spaces</option>
+        <option value="tab">Tab</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="fmt-validate">Validate</button>
+      <button class="btn ghost" id="fmt-minify">Minify</button>
+      <button class="btn primary" id="fmt-run">Format</button>
+    </div>
+
+    <div class="grid2">
+      <div class="panel" id="fmt-input-panel">
+        <div class="panel-head">
+          <span>Input</span>
+          <div class="panel-actions">
+            <button class="icon-btn" id="fmt-upload">Upload</button>
+            <button class="icon-btn" id="fmt-clear">Clear</button>
+            <button class="icon-btn" id="fmt-sample">Sample</button>
+          </div>
+        </div>
+        <textarea id="fmt-input" placeholder='Paste JSON, XML, YAML, or CSV here — or drag a file in…&#10;e.g. {"name":"Ada","tags":["math","code"]}'></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span>Output</span>
+          <div class="panel-actions">
+            <button class="icon-btn active" id="fmt-view-text">Text</button>
+            <button class="icon-btn" id="fmt-view-tree">Tree</button>
+            <button class="icon-btn" id="fmt-copy">Copy</button>
+            <button class="icon-btn" id="fmt-download">Download</button>
+          </div>
+        </div>
+        <textarea id="fmt-output" placeholder="Formatted result appears here…" readonly></textarea>
+        <div class="tree-view" id="fmt-tree" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="error-banner" id="fmt-error"></div>
+    <div class="status-banner" id="fmt-status"></div>
+  </section>
+
+  <!-- ============ COMPARE VIEW ============ -->
+  <section id="view-compare" class="view">
+    <div class="grid2">
+      <div class="panel" id="cmp-a-panel">
+        <div class="panel-head">
+          <span>Original (A)</span>
+          <div class="panel-actions"><button class="icon-btn" id="cmp-a-upload">Upload</button></div>
+        </div>
+        <textarea id="cmp-a" placeholder="Paste the original document, or drag a file in…"></textarea>
+      </div>
+      <div class="panel" id="cmp-b-panel">
+        <div class="panel-head">
+          <span>Changed (B)</span>
+          <div class="panel-actions"><button class="icon-btn" id="cmp-b-upload">Upload</button></div>
+        </div>
+        <textarea id="cmp-b" placeholder="Paste the document to compare against, or drag a file in…"></textarea>
+      </div>
+    </div>
+
+    <div class="compare-options">
+      <label class="check"><input type="checkbox" id="cmp-normalize" checked> Normalize JSON/XML/YAML before comparing</label>
+      <label class="check"><input type="checkbox" id="cmp-trim" checked> Ignore trailing whitespace</label>
+      <label class="check"><input type="checkbox" id="cmp-modified" checked> Highlight modified lines (word-level)</label>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="cmp-swap">↕ Swap A / B</button>
+      <button class="btn primary" id="cmp-run">Compare</button>
+    </div>
+
+    <div class="error-banner" id="cmp-error"></div>
+
+    <div id="cmp-results" style="display:none;">
+      <div class="readout">
+        <div class="stat match"><div class="n" id="cmp-match">0</div><div class="l">Matching lines</div></div>
+        <div class="stat moved"><div class="n" id="cmp-moved">0</div><div class="l">Moved / shuffled</div></div>
+        <div class="stat modified"><div class="n" id="cmp-modified-n">0</div><div class="l">Modified</div></div>
+        <div class="stat added"><div class="n" id="cmp-added">0</div><div class="l">Added in B</div></div>
+        <div class="stat removed"><div class="n" id="cmp-removed">0</div><div class="l">Removed from A</div></div>
+      </div>
+      <div class="diff-view" id="cmp-diff"></div>
+    </div>
+    <div class="empty-state" id="cmp-empty">Paste two documents above and hit Compare to see the diff.</div>
+  </section>
+
+  <!-- ============ CONVERT VIEW ============ -->
+  <section id="view-convert" class="view">
+    <div class="toolbar">
+      <label>From</label>
+      <select id="cv-from">
+        <option value="json">JSON</option>
+        <option value="xml">XML</option>
+        <option value="yaml">YAML</option>
+        <option value="csv">CSV</option>
+      </select>
+      <button class="icon-btn" id="cv-swap" title="Swap direction">⇄</button>
+      <label>To</label>
+      <select id="cv-to">
+        <option value="xml">XML</option>
+        <option value="json">JSON</option>
+        <option value="yaml">YAML</option>
+        <option value="csv">CSV</option>
+      </select>
+      <label style="margin-left:8px;">Indent</label>
+      <select id="cv-indent">
+        <option value="2">2 spaces</option>
+        <option value="4">4 spaces</option>
+        <option value="tab">Tab</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn primary" id="cv-run">Convert</button>
+    </div>
+
+    <div class="grid2">
+      <div class="panel" id="cv-input-panel">
+        <div class="panel-head">
+          <span>Input</span>
+          <div class="panel-actions">
+            <button class="icon-btn" id="cv-upload">Upload</button>
+            <button class="icon-btn" id="cv-clear">Clear</button>
+            <button class="icon-btn" id="cv-sample">Sample</button>
+          </div>
+        </div>
+        <textarea id="cv-input" placeholder="Paste source data, or drag a file in…"></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span>Output</span>
+          <div class="panel-actions">
+            <button class="icon-btn" id="cv-copy">Copy</button>
+            <button class="icon-btn" id="cv-download">Download</button>
+          </div>
+        </div>
+        <textarea id="cv-output" placeholder="Converted result appears here…" readonly></textarea>
+      </div>
+    </div>
+    <div class="error-banner" id="cv-error"></div>
+  </section>
+
+</main>
+
+<footer>Parsec runs entirely in your browser — nothing you paste or drop is uploaded anywhere.</footer>
+
+<script src="js/yaml.js"></script>
+<script src="js/formats.js"></script>
+<script src="js/diff.js"></script>
+<script src="js/tree.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/dragdrop.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
