@@ -56,6 +56,10 @@ js/
 
 Scripts are loaded as plain `<script src="...">` tags (not ES modules) on purpose — this keeps the site working if you just double-click `index.html` locally, since some browsers block `type="module"` imports over the `file://` protocol.
 
+## License
+
+Released under the MIT License — see `LICENSE`. For a full technical write-up of the design and architecture (useful if you want to publish or reference this work), see `WHITEPAPER.md`.
+
 ## Known limitations
 
 - The bundled YAML engine covers the common subset of YAML (nested mappings/sequences, flow collections, quoted/plain scalars, comments). It does **not** support anchors/aliases (`&x`/`*x`), tags (`!!str`), multi-document streams (`---`), or block scalars (`|`/`>`). Unsupported syntax raises a clear error rather than silently producing wrong output.
