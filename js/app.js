@@ -270,9 +270,9 @@
       '.payload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}' +
       '.payload{border:1px solid #DCE1EC;border-radius:8px;overflow:hidden;}' +
       '.payload h2{margin:0;padding:8px 12px;background:#F8F9FC;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;color:#5B6478;border-bottom:1px solid #DCE1EC;font-family:ui-monospace,monospace;}' +
-      '.payload pre{margin:0;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;max-height:520px;overflow:auto;font-family:ui-monospace,"JetBrains Mono",monospace;}' +
+      '.payload pre{margin:0;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;overflow:visible;font-family:ui-monospace,"JetBrains Mono",monospace;}' +
       'h3{font-size:0.95rem;margin:0 0 10px;}' +
-      '.diff-view{border:1px solid #DCE1EC;border-radius:8px;font-family:ui-monospace,monospace;font-size:0.8rem;overflow:auto;}' +
+      '.diff-view{border:1px solid #DCE1EC;border-radius:8px;font-family:ui-monospace,monospace;font-size:0.8rem;overflow:visible;}' +
       '.diff-line{display:flex;} .diff-line .ln{width:46px;flex-shrink:0;text-align:right;padding:2px 10px;color:#8891A4;border-right:1px solid #E7EAF3;}' +
       '.diff-line .content{padding:2px 12px;white-space:pre-wrap;word-break:break-all;flex:1;}' +
       '.diff-line .sym{display:inline-block;width:16px;opacity:1;font-weight:700;}' +
@@ -317,6 +317,16 @@
     if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
     downloadText(buildComparisonReportHtml(lastCompareState), reportFilename('html'));
   });
+
+  function downloadPayload(text, label){
+    if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
+    const type = F.detectFormat(text);
+    const ext = type === 'yaml' ? 'yaml' : (type || 'txt');
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    downloadText(text, 'parsec-' + label + '-' + stamp + '.' + ext);
+  }
+  document.getElementById('cmp-download-a').addEventListener('click', () => downloadPayload(lastCompareState ? lastCompareState.aRaw : cmpA.value, 'source-A'));
+  document.getElementById('cmp-download-b').addEventListener('click', () => downloadPayload(lastCompareState ? lastCompareState.bRaw : cmpB.value, 'target-B'));
 
   // PDF: the browser already knows how to turn HTML into a PDF via its print
   // engine, so this just loads the report into a hidden iframe and opens the
