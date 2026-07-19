@@ -58,7 +58,7 @@ Scripts are loaded as plain `<script src="...">` tags (not ES modules) on purpos
 
 ## License
 
-Released under the MIT License — see `LICENSE`. For a full technical write-up of the design and architecture (useful if you want to publish or reference this work), see `WHITEPAPER.md`.
+Released under the MIT License — see `LICENSE`. For a full technical write-up of the design and architecture (useful if you want to publish or reference this work), see `WHITEPAPER.md`. For a file-by-file, ID-by-ID guide to how `index.html`, `css/`, and `js/` correlate — useful if you're learning the codebase — see `ARCHITECTURE.md`.
 
 ## Known limitations
 

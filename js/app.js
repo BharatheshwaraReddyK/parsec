@@ -291,8 +291,8 @@
       '<div class="meta">Generated ' + escapeHtml(now) + '</div>' +
       '<div class="stats">' +
         '<div class="stat match"><div class="n">' + s.match + '</div><div class="l">Matching lines</div></div>' +
-        '<div class="stat moved"><div class="n">' + s.moved + '</div><div class="l">Moved / shuffled</div></div>' +
-        '<div class="stat modified"><div class="n">' + s.modified + '</div><div class="l">Modified</div></div>' +
+        '<div class="stat moved"><div class="n">' + s.moved + '</div><div class="l">Moved / shuffled (⇄)</div></div>' +
+        '<div class="stat modified"><div class="n">' + s.modified + '</div><div class="l">Modified (~)</div></div>' +
         '<div class="stat added"><div class="n">' + s.added + '</div><div class="l">Only in B (+)</div></div>' +
         '<div class="stat removed"><div class="n">' + s.removed + '</div><div class="l">Only in A (−)</div></div>' +
       '</div>' +
