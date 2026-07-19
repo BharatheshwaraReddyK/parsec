@@ -89,7 +89,7 @@
           const [val, nextIdx] = parseBlock(lines, idx + 1, childIndent);
           arr.push(val);
           idx = nextIdx;
-        } else if(/^[^:'"{}\[\]]+:(\s|$)/.test(rest)){
+        } else if(/^(?:"(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^:'"{}\[\]]+):(\s|$)/.test(rest)){
           const syntheticIndent = indent + 2;
           const temp = lines.slice();
           temp[idx] = { indent: syntheticIndent, content: rest };
