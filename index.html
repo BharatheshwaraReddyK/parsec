@@ -245,7 +245,21 @@
 
 </main>
 
-<footer>Parsec runs entirely in your browser — nothing you paste or drop is uploaded anywhere.</footer>
+<!-- Optional ad slot. Leave empty/commented until your AdSense application is approved,
+     then paste your actual <ins class="adsbygoogle">...</ins> unit code here. -->
+<!--
+<div style="max-width:1280px; margin: 0 auto; padding: 0 28px;">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-YOUR_PUBLISHER_ID" data-ad-slot="YOUR_AD_SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins>
+</div>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+-->
+
+<footer>
+  Parsec runs entirely in your browser — nothing you paste or drop is uploaded anywhere.
+  &nbsp;·&nbsp; <a href="privacy.html" style="color:inherit;">Privacy</a>
+  &nbsp;·&nbsp; <a href="terms.html" style="color:inherit;">Terms</a>
+  &nbsp;·&nbsp; <a href="#" id="manage-cookies-link" style="color:inherit;">Cookie preferences</a>
+</footer>
 
 <script src="js/yaml.js"></script>
 <script src="js/formats.js"></script>
@@ -254,5 +268,12 @@
 <script src="js/theme.js"></script>
 <script src="js/dragdrop.js"></script>
 <script src="js/app.js"></script>
+<script src="js/ads-consent.js"></script>
+<script>
+  document.getElementById('manage-cookies-link').addEventListener('click', function(e){
+    e.preventDefault();
+    window.ParsecCookieConsent.reopen();
+  });
+</script>
 </body>
 </html>
