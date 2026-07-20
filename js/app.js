@@ -256,39 +256,38 @@
 
   function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function buildComparisonReportHtml(state){
+  const REPORT_CSS =
+    'body{font-family:-apple-system,Segoe UI,Inter,sans-serif;background:#fff;color:#10192B;max-width:1200px;margin:0 auto;padding:32px;}' +
+    'h1{font-size:1.3rem;margin:0 0 4px;} .meta{color:#5B6478;font-size:0.82rem;margin-bottom:24px;font-family:ui-monospace,monospace;}' +
+    '.stats{display:flex;gap:0;border:1px solid #DCE1EC;border-radius:8px;overflow:hidden;margin-bottom:24px;font-family:ui-monospace,monospace;}' +
+    '.stat{flex:1;padding:12px 16px;border-right:1px solid #DCE1EC;} .stat:last-child{border-right:none;}' +
+    '.stat .n{font-size:1.4rem;font-weight:700;font-family:-apple-system,sans-serif;} .stat .l{font-size:0.68rem;color:#8891A4;text-transform:uppercase;letter-spacing:0.05em;}' +
+    '.match .n{color:#0F9D6E;} .moved .n{color:#6D28D9;} .modified .n{color:#B45309;} .added .n{color:#0891B2;} .removed .n{color:#BE123C;}' +
+    '.payload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}' +
+    '.payload{border:1px solid #DCE1EC;border-radius:8px;overflow:hidden;}' +
+    '.payload h2{margin:0;padding:8px 12px;background:#F8F9FC;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;color:#5B6478;border-bottom:1px solid #DCE1EC;font-family:ui-monospace,monospace;}' +
+    '.payload pre{margin:0;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;overflow:visible;font-family:ui-monospace,"JetBrains Mono",monospace;}' +
+    'h3{font-size:0.95rem;margin:0 0 10px;}' +
+    '.diff-view{border:1px solid #DCE1EC;border-radius:8px;font-family:ui-monospace,monospace;font-size:0.8rem;overflow:visible;}' +
+    '.diff-line{display:flex;} .diff-line .ln{width:46px;flex-shrink:0;text-align:right;padding:2px 10px;color:#8891A4;border-right:1px solid #E7EAF3;}' +
+    '.diff-line .content{padding:2px 12px;white-space:pre-wrap;word-break:break-all;flex:1;}' +
+    '.diff-line .sym{display:inline-block;width:16px;opacity:1;font-weight:700;}' +
+    '.diff-line.same .content{color:#5B6478;}' +
+    '.diff-line.same .sym{opacity:0.4;font-weight:400;}' +
+    '.diff-line.added{background:#E1F6FA;} .diff-line.added .content,.diff-line.added .ln{color:#0891B2;}' +
+    '.diff-line.removed{background:#FDE4E9;} .diff-line.removed .content,.diff-line.removed .ln{color:#BE123C;}' +
+    '.diff-line.moved-from,.diff-line.moved-to{background:#EFE9FE;} .diff-line.moved-from .content,.diff-line.moved-to .content,.diff-line.moved-from .ln,.diff-line.moved-to .ln{color:#6D28D9;}' +
+    '.diff-line.modified-from,.diff-line.modified-to{background:#FDF1DC;} .diff-line.modified-from .ln,.diff-line.modified-to .ln{color:#B45309;} .diff-line.modified-from .sym,.diff-line.modified-to .sym{color:#B45309;}' +
+    '.tok-removed{background:#FDE4E9;color:#BE123C;text-decoration:line-through;border-radius:3px;}' +
+    '.tok-added{background:#E1F6FA;color:#0891B2;border-radius:3px;}' +
+    '.move-note{color:#6D28D9;opacity:0.75;font-size:0.72rem;margin-left:10px;}' +
+    '.note{color:#8891A4;font-size:0.78rem;margin:10px 0 24px;font-family:ui-monospace,monospace;}' +
+    '@media print{ body{padding:0;} @page{margin:16mm;} }';
+
+  function buildComparisonReportBody(state){
     const now = new Date().toLocaleString();
     const s = state.stats;
-    return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8">' +
-      '<title>Parsec comparison report</title><style>' +
-      'body{font-family:-apple-system,Segoe UI,Inter,sans-serif;background:#fff;color:#10192B;max-width:1200px;margin:0 auto;padding:32px;}' +
-      'h1{font-size:1.3rem;margin:0 0 4px;} .meta{color:#5B6478;font-size:0.82rem;margin-bottom:24px;font-family:ui-monospace,monospace;}' +
-      '.stats{display:flex;gap:0;border:1px solid #DCE1EC;border-radius:8px;overflow:hidden;margin-bottom:24px;font-family:ui-monospace,monospace;}' +
-      '.stat{flex:1;padding:12px 16px;border-right:1px solid #DCE1EC;} .stat:last-child{border-right:none;}' +
-      '.stat .n{font-size:1.4rem;font-weight:700;font-family:-apple-system,sans-serif;} .stat .l{font-size:0.68rem;color:#8891A4;text-transform:uppercase;letter-spacing:0.05em;}' +
-      '.match .n{color:#0F9D6E;} .moved .n{color:#6D28D9;} .modified .n{color:#B45309;} .added .n{color:#0891B2;} .removed .n{color:#BE123C;}' +
-      '.payload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}' +
-      '.payload{border:1px solid #DCE1EC;border-radius:8px;overflow:hidden;}' +
-      '.payload h2{margin:0;padding:8px 12px;background:#F8F9FC;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;color:#5B6478;border-bottom:1px solid #DCE1EC;font-family:ui-monospace,monospace;}' +
-      '.payload pre{margin:0;padding:12px;white-space:pre-wrap;word-break:break-word;font-size:0.78rem;overflow:visible;font-family:ui-monospace,"JetBrains Mono",monospace;}' +
-      'h3{font-size:0.95rem;margin:0 0 10px;}' +
-      '.diff-view{border:1px solid #DCE1EC;border-radius:8px;font-family:ui-monospace,monospace;font-size:0.8rem;overflow:visible;}' +
-      '.diff-line{display:flex;} .diff-line .ln{width:46px;flex-shrink:0;text-align:right;padding:2px 10px;color:#8891A4;border-right:1px solid #E7EAF3;}' +
-      '.diff-line .content{padding:2px 12px;white-space:pre-wrap;word-break:break-all;flex:1;}' +
-      '.diff-line .sym{display:inline-block;width:16px;opacity:1;font-weight:700;}' +
-      '.diff-line.same .content{color:#5B6478;}' +
-      '.diff-line.same .sym{opacity:0.4;font-weight:400;}' +
-      '.diff-line.added{background:#E1F6FA;} .diff-line.added .content,.diff-line.added .ln{color:#0891B2;}' +
-      '.diff-line.removed{background:#FDE4E9;} .diff-line.removed .content,.diff-line.removed .ln{color:#BE123C;}' +
-      '.diff-line.moved-from,.diff-line.moved-to{background:#EFE9FE;} .diff-line.moved-from .content,.diff-line.moved-to .content,.diff-line.moved-from .ln,.diff-line.moved-to .ln{color:#6D28D9;}' +
-      '.diff-line.modified-from,.diff-line.modified-to{background:#FDF1DC;} .diff-line.modified-from .ln,.diff-line.modified-to .ln{color:#B45309;} .diff-line.modified-from .sym,.diff-line.modified-to .sym{color:#B45309;}' +
-      '.tok-removed{background:#FDE4E9;color:#BE123C;text-decoration:line-through;border-radius:3px;}' +
-      '.tok-added{background:#E1F6FA;color:#0891B2;border-radius:3px;}' +
-      '.move-note{color:#6D28D9;opacity:0.75;font-size:0.72rem;margin-left:10px;}' +
-      '.note{color:#8891A4;font-size:0.78rem;margin:10px 0 24px;font-family:ui-monospace,monospace;}' +
-      '@media print{ body{padding:0;} .payload pre{max-height:none;overflow:visible;} .diff-view{max-height:none;overflow:visible;} @page{margin:16mm;} }' +
-      '</style></head><body>' +
-      '<h1>Parsec comparison report</h1>' +
+    return '<h1>Parsec comparison report</h1>' +
       '<div class="meta">Generated ' + escapeHtml(now) + '</div>' +
       '<div class="stats">' +
         '<div class="stat match"><div class="n">' + s.match + '</div><div class="l">Matching lines</div></div>' +
@@ -304,7 +303,13 @@
       (state.normalized ? '<div class="note">Note: the diff below was computed after normalizing JSON/XML/YAML formatting and trimming trailing whitespace — line numbers correspond to that normalized form, not necessarily the raw payloads above.</div>' : '') +
       '<h3>Diff</h3>' +
       '<div class="note" style="margin-top:-4px;">Legend: <b>+</b> only in B &nbsp; <b>−</b> only in A &nbsp; <b>⇄</b> moved / shuffled &nbsp; <b>~</b> modified (word-level changes highlighted)</div>' +
-      '<div class="diff-view">' + state.diffHtml + '</div>' +
+      '<div class="diff-view">' + state.diffHtml + '</div>';
+  }
+
+  function buildComparisonReportHtml(state){
+    return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8">' +
+      '<title>Parsec comparison report</title><style>' + REPORT_CSS + '</style></head><body>' +
+      buildComparisonReportBody(state) +
       '</body></html>';
   }
 
@@ -353,78 +358,62 @@
     iframe.srcdoc = reportHtml;
   });
 
-  // PNG: best-effort, no-library image export. Renders the report into a
-  // hidden iframe (to get real, laid-out content and an accurate height),
-  // serializes that into a self-contained SVG via <foreignObject>, then draws
-  // the SVG onto a canvas and exports it as a PNG. This works in most modern
-  // browsers for content like ours (no external images/fonts), but some
-  // browsers — Safari in particular — can block canvas export for
-  // foreignObject-based SVGs as a security precaution. If that happens we
-  // show a clear error and point back to the HTML/PDF options instead of
-  // failing silently.
-  document.getElementById('cmp-download-png').addEventListener('click', () => {
+  // PNG: uses html2canvas (loaded from a CDN only when this button is
+  // clicked — the rest of the app stays fully offline). This replaces an
+  // earlier from-scratch SVG+foreignObject+canvas approach that was fragile
+  // across browsers (particularly Safari, which blocks canvas export for
+  // foreignObject-rendered SVGs as a security precaution). html2canvas avoids
+  // that entirely: it walks the real DOM and its computed styles directly,
+  // with no SVG serialization step, which is why it's the standard tool for
+  // this job rather than a browser quirk to work around.
+  let html2canvasPromise = null;
+  function loadHtml2Canvas(){
+    if(window.html2canvas) return Promise.resolve(window.html2canvas);
+    if(html2canvasPromise) return html2canvasPromise;
+    html2canvasPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = () => { html2canvasPromise = null; reject(new Error('Could not load the PNG export library — check your internet connection.')); };
+      document.head.appendChild(script);
+    });
+    return html2canvasPromise;
+  }
+
+  document.getElementById('cmp-download-png').addEventListener('click', async () => {
     if(!lastCompareState){ showError(cmpError, 'Run a comparison first.'); return; }
     showError(cmpError, null);
-    const reportHtml = buildComparisonReportHtml(lastCompareState);
-    const width = 1200;
+    const btn = document.getElementById('cmp-download-png');
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Rendering…'; btn.disabled = true;
 
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed; left:-99999px; top:0; width:' + width + 'px; height:600px; border:0;';
-    document.body.appendChild(iframe);
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed; left:-99999px; top:0; width:1200px; background:#ffffff;';
+    const styleEl = document.createElement('style');
+    styleEl.textContent = REPORT_CSS;
+    container.appendChild(styleEl);
+    const body = document.createElement('div');
+    body.innerHTML = buildComparisonReportBody(lastCompareState);
+    container.appendChild(body);
+    document.body.appendChild(container);
 
-    iframe.onload = () => {
-      let doc, height;
-      try{
-        doc = iframe.contentDocument;
-        height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 600);
-      }catch(e){
-        document.body.removeChild(iframe);
-        showError(cmpError, 'PNG export failed while measuring the report. Try HTML or PDF instead.');
-        return;
-      }
-
-      const innerHtml = doc.documentElement.outerHTML;
-      const svgString =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
-        '<foreignObject width="100%" height="100%">' + innerHtml + '</foreignObject></svg>';
-
-      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-      const svgUrl = URL.createObjectURL(svgBlob);
-      const img = new Image();
-
-      img.onload = () => {
-        try{
-          const scale = 2; // render at 2x for a sharper image
-          const canvas = document.createElement('canvas');
-          canvas.width = width * scale;
-          canvas.height = height * scale;
-          const ctx = canvas.getContext('2d');
-          ctx.scale(scale, scale);
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(blob => {
-            if(!blob){ showError(cmpError, 'This browser blocked PNG export for security reasons. Try HTML or PDF instead.'); return; }
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = reportFilename('png');
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          }, 'image/png');
-        }catch(e){
-          showError(cmpError, 'This browser blocked PNG export for security reasons (' + e.message + '). Try HTML or PDF instead.');
-        }finally{
-          URL.revokeObjectURL(svgUrl);
-          document.body.removeChild(iframe);
-        }
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(svgUrl);
-        document.body.removeChild(iframe);
-        showError(cmpError, 'PNG export isn\'t supported in this browser. Try HTML or PDF instead.');
-      };
-      img.src = svgUrl;
-    };
-    iframe.srcdoc = reportHtml;
+    try{
+      await new Promise(r => setTimeout(r, 30)); // let layout settle before rasterizing
+      const html2canvas = await loadHtml2Canvas();
+      const canvas = await html2canvas(container, { backgroundColor: '#ffffff', scale: 2, windowWidth: 1200 });
+      const blob = await new Promise((resolve, reject) =>
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('Could not render the image.')), 'image/png')
+      );
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = reportFilename('png');
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }catch(e){
+      showError(cmpError, 'PNG export failed: ' + e.message + '. Try HTML or PDF instead.');
+    }finally{
+      document.body.removeChild(container);
+      btn.textContent = originalLabel; btn.disabled = false;
+    }
   });
 
   const triggerCmpAUpload = window.ParsecDragDrop.attach(cmpA);
